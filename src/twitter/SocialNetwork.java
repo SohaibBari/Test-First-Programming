@@ -3,6 +3,8 @@
  */
 package twitter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +43,17 @@ public class SocialNetwork {
      *         either authors or @-mentions in the list of tweets.
      */
     public static Map<String, Set<String>> guessFollowsGraph(List<Tweet> tweets) {
-        throw new RuntimeException("not implemented");
+    	Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+    	List<String> checkedAuthors = new ArrayList<String>();
+        for(Tweet tweet: tweets) {
+        	String author = tweet.getAuthor();
+        	if (!checkedAuthors.contains(author)) {
+        		List<Tweet> AuthorTweets = Filter.writtenBy(tweets, author);
+        		Set<String> Following = Extract.getMentionedUsers(AuthorTweets);
+        		map.put(author, Following);
+        	}
+        }
+       return map;
     }
 
     /**
@@ -54,7 +66,47 @@ public class SocialNetwork {
      *         descending order of follower count.
      */
     public static List<String> influencers(Map<String, Set<String>> followsGraph) {
-        throw new RuntimeException("not implemented");
+        Set<String> keys = followsGraph.keySet();
+        List<String> sortedList = new ArrayList<String>();
+        
+        String[] authors = new String[keys.size()];
+        int[] follows = new int[keys.size()];
+        int iter=0;
+        
+        //Retrieving authors and the number of followers
+        for (String key:keys) {
+        	int followers = followsGraph.get(key).size();
+        	
+        	authors[iter] = key;
+        	follows[iter] = followers;
+        	iter++;
+        }
+        
+        //Adding followers on the basis of maximum value
+        for(int i=0;i< authors.length;i++) {
+        	int max=0, maxIndex=-1;
+        	for (int j=0; j< follows.length ;j++) {
+        		if(follows[j]>max) {
+        			max= follows[j];
+        			maxIndex=j;
+        		}
+        	}
+        	if (maxIndex!=-1) {
+        		sortedList.add(authors[maxIndex]);
+            	follows[maxIndex]=0;
+        	}
+        }
+        
+        //Adding any remaining authors, that had no followers
+        for (String key:keys) {
+        	if (!sortedList.contains(key)) {
+        		sortedList.add(key);
+        	}
+        }
+        
+        
+        
+    	return sortedList;
     }
 
 }

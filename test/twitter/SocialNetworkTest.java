@@ -5,8 +5,11 @@ package twitter;
 
 import static org.junit.Assert.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +23,21 @@ public class SocialNetworkTest {
      * See the ic03-testing exercise for examples of what a testing strategy comment looks like.
      * Make sure you have partitions.
      */
+		private static final Instant d1 = Instant.parse("2016-02-17T10:00:00Z");
+	    private static final Instant d2 = Instant.parse("2016-02-17T11:00:00Z");
+	    private static final Instant d3 = Instant.parse("2016-03-17T11:00:00Z");
+	    private static final Instant d4 = Instant.parse("2016-01-17T11:00:00Z");
+	
+	    private static final Tweet tweet1 = new Tweet(1, "maheer", "@rosh is it reasonable to talk about rivest so much?", d1);
+	    private static final Tweet tweet2 = new Tweet(2, "rosh", "rivest @sohaib talk in 30 minutes #hype", d2);
+	    private static final Tweet tweet3 = new Tweet(3, "ziad", "rivest talk in @maheer 30 minutes #hype", d3);
+	    private static final Tweet tweet4 = new Tweet(3, "hammad", "rivest talk in @rosheen @khadija 30 minutes #hype", d4);
+	    private static final Tweet tweet5 = new Tweet(1, "alyssa", "is @maheer @rosh @ziad it reasonable to talk about rivest so much?", d1);
+	    private static final Tweet tweet6 = new Tweet(2, "bbitdiddle", "rivest @farrukh @sohaib talk in 30 minutes #hype", d2);
+	    private static final Tweet tweet7 = new Tweet(3, "boi", "rivest talk in @maheer 30 minutes #hype", d3);
+	    private static final Tweet tweet8 = new Tweet(3, "boi", "rivest talk in @rosheen @maheer 30 minutes #hype", d4);
     
-    @Test(expected=AssertionError.class)
+	    @Test(expected=AssertionError.class)
     public void testAssertionsEnabled() {
         assert false; // make sure assertions are enabled with VM argument: -ea
     }
@@ -34,12 +50,68 @@ public class SocialNetworkTest {
     }
     
     @Test
+    public void testGuessFollowsGraphOne() {
+        Map<String, Set<String>> followsGraph = SocialNetwork.guessFollowsGraph(Arrays.asList(tweet1, tweet2, tweet3));
+        
+        assertFalse("expected empty graph", followsGraph.isEmpty());
+    }
+    
+    @Test
+    public void testGuessFollowsGraphTwo() {
+        Map<String, Set<String>> followsGraph = SocialNetwork.guessFollowsGraph(Arrays.asList(tweet1, tweet2, tweet3));
+        Map<String, Set<String>> expectedMap = new HashMap<String, Set<String>>();
+        Set<String> Following = new HashSet();
+        Following.add("@rosh");
+        String author = "maheer";
+        expectedMap.put(author, Following);
+        Set<String> Following1 = new HashSet();
+        Following1.add("@sohaib");
+        String author1 = "rosh";
+        expectedMap.put(author1, Following1);
+        Set<String> Following2 = new HashSet();
+        Following2.add("@maheer");
+        String author2 = "ziad";
+        expectedMap.put(author2, Following2);
+        assertEquals(expectedMap,followsGraph);
+    }
+    
+    
+    @Test
     public void testInfluencersEmpty() {
         Map<String, Set<String>> followsGraph = new HashMap<>();
         List<String> influencers = SocialNetwork.influencers(followsGraph);
         
         assertTrue("expected empty list", influencers.isEmpty());
     }
+    
+    @Test
+    public void testInfluencersOne() {
+    	Map<String, Set<String>> followsGraph = SocialNetwork.guessFollowsGraph(Arrays.asList(tweet1, tweet2, tweet3));
+        List<String> influencers = SocialNetwork.influencers(followsGraph);
+        
+        assertFalse("expected empty list", influencers.isEmpty());
+    }
+    
+    @Test
+    public void testInfluencersTwo() {
+    	Map<String, Set<String>> followsGraph = SocialNetwork.guessFollowsGraph(Arrays.asList(tweet5, tweet6, tweet7));
+        List<String> influencers = SocialNetwork.influencers(followsGraph);
+       
+        ArrayList<String> expectedList =new ArrayList<String>();
+        expectedList.add("alyssa");
+        expectedList.add("bbitdiddle");
+        expectedList.add("boi");
+        assertEquals(expectedList , influencers);
+    }
+
+    
+    @Test
+    public void testInfluencersSixTweets(){
+        Map<String,Set<String>> followsGraph= SocialNetwork.guessFollowsGraph(Arrays.asList(tweet1,tweet2,tweet3,tweet4,tweet5,tweet6));
+        List<String> influencers= SocialNetwork.influencers(followsGraph);
+        assertEquals(influencers.get(0),"alyssa");
+                  
+        }
 
     /*
      * Warning: all the tests you write here must be runnable against any
